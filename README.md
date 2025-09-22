@@ -335,6 +335,49 @@ try {
 }
 ```
 
+## Module Selection Guide
+
+### When to Use Each Module
+
+**PS-Defaults (Main Module)**
+- Use when you need backward compatibility with existing scripts
+- Automatically loads PS-Defaults.Default for full compatibility
+- Perfect for legacy implementations
+
+**PS-Defaults.Default** 
+- Use for core functionality without bloat
+- Includes: logging, configuration, error handling, utilities
+- Best for: scripts that need basic standardization
+- Memory footprint: ~22 functions
+
+**PS-Defaults.AdvancedLogging**
+- Use when you need detailed logging and analysis
+- Includes: session management, structured logging, HTML/CSV reports
+- Best for: production monitoring, debugging, audit trails
+- Requires: PS-Defaults.Default
+- Additional functions: 10 advanced logging functions
+
+**PS-Defaults.Networking**
+- Use for network-focused scripts and monitoring
+- Includes: connectivity testing, endpoint monitoring
+- Best for: network administration, health checks
+- Standalone module: 2 specialized functions
+
+**PS-Defaults.System**
+- Use for system administration and monitoring
+- Includes: system information, disk monitoring
+- Best for: system health checks, inventory scripts  
+- Standalone module: 2 specialized functions
+
+### Benefits of Modular Architecture
+
+1. **Reduced Memory Footprint**: Import only what you need
+2. **Clear Separation of Concerns**: Each module has a specific purpose
+3. **Enhanced Functionality**: Advanced modules provide powerful features without bloating core module
+4. **Backward Compatibility**: Existing scripts continue to work unchanged
+5. **Future Extensibility**: Easy to add new specialized modules
+6. **Better Organization**: Functions are logically grouped by purpose
+
 ## Contributing
 
 1. Fork the repository
@@ -349,8 +392,19 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
-### Version 1.0.0
-- Initial release
+### Version 1.0.0 (Modular Release)
+- **NEW**: Modular architecture with pluggable functionality
+- **NEW**: PS-Defaults.Default module with core functions (22 functions)
+- **NEW**: PS-Defaults.AdvancedLogging module with enhanced logging features (10 functions)
+  - Log session management with performance tracking
+  - Log analysis and reporting (HTML, CSV, JSON formats)
+  - Structured JSON logging with custom fields
+  - Log forwarding to external systems
+- **NEW**: PS-Defaults.Networking module for network utilities (2 functions)
+- **NEW**: PS-Defaults.System module for system monitoring (2 functions)
+- **IMPROVED**: Backward compatibility maintained - existing scripts work unchanged
+- **IMPROVED**: Reduced memory footprint when using selective module loading
+- **IMPROVED**: Clear separation of concerns across modules
 - Standardized logging system
 - Error handling and webhook notifications
 - Configuration management

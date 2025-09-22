@@ -106,7 +106,21 @@ function Get-LogAnalysis {
     )
 
     if (-not $LogPath) {
-        $LogPath = $Script:PSDefaultsConfig.LogPath
+        # Try to get the log path from the Default module configuration
+        if (Get-Variable PSDefaultsConfig -Scope Global -ErrorAction SilentlyContinue) {
+            $LogPath = (Get-Variable PSDefaultsConfig -Scope Global).Value.LogPath
+        } elseif ($Script:PSDefaultsConfig) {
+            $LogPath = $Script:PSDefaultsConfig.LogPath
+        } else {
+            # Fallback to standard temp location
+            $TempPath = if ($env:TEMP) { $env:TEMP } elseif ($env:TMPDIR) { $env:TMPDIR } else { '/tmp' }
+            $LogPath = Join-Path -Path $TempPath -ChildPath 'PS-Defaults'
+        }
+    }
+
+    if (-not $LogPath -or -not (Test-Path $LogPath)) {
+        Write-WarningLog -Message "Log path not found or not specified: $LogPath. No logs to analyze." -Source "Get-LogAnalysis"
+        return $analysis
     }
 
     $analysis = @{
