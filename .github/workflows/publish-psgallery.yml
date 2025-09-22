@@ -1,0 +1,130 @@
+---
+name: Publish to PowerShell Gallery
+
+"on":
+  release:
+    types: [published]
+  push:
+    branches: [main]
+    paths:
+      - 'PS-Defaults.psd1'
+      - 'PS-Defaults.psm1'
+      - 'PS-Defaults.*.psd1'
+      - 'PS-Defaults.*.psm1'
+      - 'Public/**'
+      - 'Private/**'
+
+env:
+  MODULE_NAME: 'PS-Defaults'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        shell: pwsh
+        run: |
+          Write-Host "PowerShell version: $($PSVersionTable.PSVersion)"
+          Write-Host "PowerShell edition: $($PSVersionTable.PSEdition)"
+
+      - name: Test module manifest
+        shell: pwsh
+        run: |
+          Write-Host "Testing module manifest..."
+          $manifest = Test-ModuleManifest -Path "./PS-Defaults.psd1"
+          Write-Host "Module: $($manifest.Name)"
+          Write-Host "Version: $($manifest.Version)"
+          Write-Host "Author: $($manifest.Author)"
+          Write-Host "Description: $($manifest.Description)"
+          Write-Host "Exported Functions: $($manifest.ExportedFunctions.Count)"
+
+      - name: Import and test module
+        shell: pwsh
+        run: |
+          Write-Host "Importing module..."
+          Import-Module "./PS-Defaults.psd1" -Force
+
+          Write-Host "Testing basic functionality..."
+          $module = Get-Module PS-Defaults
+          if (-not $module) {
+            throw "Module failed to import"
+          }
+
+          Write-Host "Module imported successfully with $($module.ExportedFunctions.Count) functions"
+
+          # Test a few key functions exist
+          $testFunctions = @('Write-StandardLog', 'Get-StandardConfig', 'Initialize-StandardLogging')
+          foreach ($func in $testFunctions) {
+            if (-not (Get-Command $func -ErrorAction SilentlyContinue)) {
+              throw "Required function '$func' not found"
+            }
+          }
+          Write-Host "Core functions verified"
+
+      - name: Check if this is a release event
+        id: is_release
+        shell: pwsh
+        run: |
+          $isRelease = '${{ github.event_name }}' -eq 'release'
+          Write-Host "Is release event: $isRelease"
+          "is_release=$($isRelease.ToString().ToLower())" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Publish to PowerShell Gallery (Release Only)
+        if: steps.is_release.outputs.is_release == 'true'
+        shell: pwsh
+        env:
+          PSGALLERY_API_KEY: ${{ secrets.PSGALLERY_API_KEY }}
+        run: |
+          if ([string]::IsNullOrEmpty($env:PSGALLERY_API_KEY)) {
+            Write-Error "PSGALLERY_API_KEY secret is not set. Please add it to repository secrets."
+            exit 1
+          }
+
+          Write-Host "Publishing module to PowerShell Gallery..."
+          try {
+            Publish-Module -Path "./PS-Defaults.psd1" -NuGetApiKey $env:PSGALLERY_API_KEY -Repository PSGallery -Verbose
+            Write-Host "Module published successfully to PowerShell Gallery!"
+          }
+          catch {
+            Write-Error "Failed to publish module: $($_.Exception.Message)"
+            exit 1
+          }
+
+      - name: Validate module for publication (Push to main)
+        if: steps.is_release.outputs.is_release == 'false'
+        shell: pwsh
+        run: |
+          Write-Host "Validating module for PowerShell Gallery compliance (dry run)..."
+
+          # Check required manifest fields
+          $manifest = Import-PowerShellDataFile -Path "./PS-Defaults.psd1"
+
+          $requiredFields = @('ModuleVersion', 'Author', 'Description', 'PowerShellVersion')
+          foreach ($field in $requiredFields) {
+            if ([string]::IsNullOrEmpty($manifest.$field)) {
+              Write-Error "Required field '$field' is missing or empty in module manifest"
+              exit 1
+            }
+          }
+
+          # Check PSData section
+          if (-not $manifest.PrivateData.PSData) {
+            Write-Error "PSData section is missing from PrivateData"
+            exit 1
+          }
+
+          $psData = $manifest.PrivateData.PSData
+          $recommendedFields = @('Tags', 'LicenseUri', 'ProjectUri')
+          foreach ($field in $recommendedFields) {
+            if ([string]::IsNullOrEmpty($psData.$field)) {
+              Write-Warning "Recommended field '$field' is missing or empty"
+            } else {
+              Write-Host "✓ $field : $($psData.$field)"
+            }
+          }
+
+          Write-Host "Module validation completed - ready for publication!"
