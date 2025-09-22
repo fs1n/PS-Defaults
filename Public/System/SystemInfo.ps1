@@ -236,6 +236,10 @@ function Get-DiskSpaceInfo {
                         $Used = $Drive.Used
                         $Free = $Drive.Free
                         $Total = $Used + $Free
+                        if (-not $Total -or $Total -eq 0) {
+                            Write-WarningLog -Message "Skipping drive $($Drive.Name) due to zero total size (possible offline or special mount)." -Source "Get-DiskSpaceInfo"
+                            continue
+                        }
                         $FreePercent = ($Free / $Total) * 100
 
                         $DriveInfo = @{
@@ -269,7 +273,14 @@ function Get-DiskSpaceInfo {
             }
         } else {
             foreach ($Disk in $Disks) {
-                $FreePercent = ($Disk.FreeSpace / $Disk.Size) * 100
+                # Guard against null or zero size values to prevent division by zero
+                $diskSize = $Disk.Size
+                $diskFree = $Disk.FreeSpace
+                if (-not $diskSize -or $diskSize -eq 0) {
+                    Write-WarningLog -Message "Skipping drive $($Disk.DeviceID) due to reported size 0 (cannot calculate free space percent)." -Source "Get-DiskSpaceInfo"
+                    continue
+                }
+                $FreePercent = ($diskFree / $diskSize) * 100
 
                 $DriveInfo = @{
                     Drive = $Disk.DeviceID

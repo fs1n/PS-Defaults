@@ -53,12 +53,37 @@ function Write-StandardLog {
         # Format log entry
         $LogEntry = "[$Timestamp] [$Level] [$Source] $Message"
         
-        # Write to console with appropriate color
-        switch ($Level) {
-            'Debug' { Write-Debug $LogEntry }
-            'Information' { Write-Information $LogEntry -InformationAction Continue }
-            'Warning' { Write-Warning $LogEntry }
-            'Error' { Write-Error $LogEntry }
+        # Determine console logging behavior from configuration
+        $consoleEnabled = $true
+        if ($Script:PSDefaultsConfig.ContainsKey('ConsoleOutputEnabled')) {
+            $consoleEnabled = [bool]$Script:PSDefaultsConfig.ConsoleOutputEnabled
+        }
+        $useErrorStream = $false
+        if ($Script:PSDefaultsConfig.ContainsKey('UseErrorStreamForErrors')) {
+            $useErrorStream = [bool]$Script:PSDefaultsConfig.UseErrorStreamForErrors
+        }
+
+        if ($consoleEnabled) {
+            switch ($Level) {
+                'Debug' {
+                    # Respect DebugPreference when possible
+                    Write-Debug $LogEntry
+                }
+                'Information' {
+                    Write-Host $LogEntry -ForegroundColor White
+                }
+                'Warning' {
+                    Write-Host $LogEntry -ForegroundColor Yellow
+                }
+                'Error' {
+                    if ($useErrorStream) {
+                        # Fallback to traditional error stream if explicitly requested
+                        Write-Error $LogEntry
+                    } else {
+                        Write-Host $LogEntry -ForegroundColor Red
+                    }
+                }
+            }
         }
         
         # Ensure log directory exists
@@ -121,6 +146,14 @@ function Initialize-StandardLogging {
         
         $Script:PSDefaultsConfig.MaxLogSize = $MaxLogSize
         $Script:PSDefaultsConfig.LogRetentionDays = $RetentionDays
+
+        # Initialize new logging behavior config keys if absent
+        if (-not $Script:PSDefaultsConfig.ContainsKey('ConsoleOutputEnabled')) {
+            $Script:PSDefaultsConfig.ConsoleOutputEnabled = $true
+        }
+        if (-not $Script:PSDefaultsConfig.ContainsKey('UseErrorStreamForErrors')) {
+            $Script:PSDefaultsConfig.UseErrorStreamForErrors = $false
+        }
         
         # Ensure log directory exists
         if (-not (Test-Path $Script:PSDefaultsConfig.LogPath)) {
