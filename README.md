@@ -173,6 +173,10 @@ Import-StandardConfig -ConfigFile "production.json" -Merge
 
 ### System Monitoring
 ```powershell
+# Import required modules for system monitoring
+Import-Module PS-Defaults.Networking
+Import-Module PS-Defaults.System
+
 # Test network connectivity
 $ConnTest = Test-NetworkConnectivity -ComputerName "google.com" -Port 443 -TestPing -TestDNS
 if (-not $ConnTest.Success) {
