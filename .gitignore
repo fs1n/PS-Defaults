@@ -1,0 +1,45 @@
+# PS-Defaults specific ignores
+
+# Log files and directories
+*-logs/
+*.log
+logs/
+
+# Temporary directories
+temp/
+tmp/
+*-temp/
+*-tmp/
+
+# Configuration files that might contain secrets
+config.json
+*-config.json
+production.json
+staging.json
+
+# Test artifacts
+test-results/
+coverage/
+
+# PowerShell specific
+*.ps1xml
+*.format.ps1xml
+*.types.ps1xml
+
+# IDE and editor files
+.vscode/
+.vs/
+*.swp
+*.swo
+*~
+
+# OS specific
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+*.7z
