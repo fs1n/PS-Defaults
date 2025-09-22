@@ -13,6 +13,7 @@ tmp/
 
 # Configuration files that might contain secrets
 config.json
+*config.json
 *-config.json
 production.json
 staging.json
