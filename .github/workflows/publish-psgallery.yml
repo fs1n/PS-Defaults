@@ -35,7 +35,7 @@ jobs:
         shell: pwsh
         run: |
           Write-Host "Testing module manifest..."
-          $manifest = Test-ModuleManifest -Path "./PS-Defaults/PS-Defaults.psd1"
+          $manifest = Test-ModuleManifest -Path "./PS-Defaults.psd1"
           Write-Host "Module: $($manifest.Name)"
           Write-Host "Version: $($manifest.Version)"
           Write-Host "Author: $($manifest.Author)"
@@ -46,7 +46,7 @@ jobs:
         shell: pwsh
         run: |
           Write-Host "Importing module..."
-          Import-Module "./PS-Defaults/PS-Defaults.psd1" -Force
+          Import-Module "./PS-Defaults.psd1" -Force
 
           Write-Host "Testing basic functionality..."
           $module = Get-Module PS-Defaults
@@ -86,7 +86,7 @@ jobs:
 
           Write-Host "Publishing module to PowerShell Gallery..."
           try {
-            Publish-Module -Path "./PS-Defaults/PS-Defaults.psd1" -NuGetApiKey $env:PSGALLERY_API_KEY -Repository PSGallery -Verbose
+            Publish-Module -Path "./PS-Defaults.psd1" -NuGetApiKey $env:PSGALLERY_API_KEY -Repository PSGallery -Verbose
             Write-Host "Module published successfully to PowerShell Gallery!"
           }
           catch {
@@ -101,7 +101,7 @@ jobs:
           Write-Host "Validating module for PowerShell Gallery compliance (dry run)..."
 
           # Check required manifest fields
-          $manifest = Import-PowerShellDataFile -Path "./PS-Defaults/PS-Defaults.psd1"
+          $manifest = Import-PowerShellDataFile -Path "./PS-Defaults.psd1"
 
           $requiredFields = @('ModuleVersion', 'Author', 'Description', 'PowerShellVersion')
           foreach ($field in $requiredFields) {
