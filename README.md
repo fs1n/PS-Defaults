@@ -93,6 +93,25 @@ Import-Module PS-Defaults.System
    Import-Module "C:\Path\To\PS-Defaults\PS-Defaults.psd1"
    ```
 
+## CI/CD Automation
+
+PS-Defaults includes automated publishing to PowerShell Gallery using GitHub Actions.
+
+### Automated Publishing Setup
+
+1. **Get PowerShell Gallery API Key**: Log into [PowerShell Gallery](https://www.powershellgallery.com/) → Profile → API Keys → Create new key
+2. **Add Repository Secret**: Go to repository Settings → Secrets → Actions → Add `PSGALLERY_API_KEY`
+3. **Create Release**: The workflow automatically publishes to PowerShell Gallery when you create a GitHub release
+
+### Workflow Features
+
+- ✅ **Automated Testing**: Validates module manifest and imports on every push
+- ✅ **PowerShell Gallery Publishing**: Publishes on release creation only
+- ✅ **Security**: API key stored safely in GitHub secrets
+- ✅ **Validation**: Ensures module compliance before publishing
+
+For detailed setup instructions, see [`.github/PUBLISHING.md`](.github/PUBLISHING.md).
+
 ## Quick Start
 
 ### Basic Logging
