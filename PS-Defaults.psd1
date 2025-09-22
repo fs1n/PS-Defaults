@@ -62,7 +62,6 @@
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
     FunctionsToExport = @(
         'Write-StandardLog',
-        'Send-ErrorWebhook',
         'Get-StandardConfig',
         'Set-StandardConfig',
         'Initialize-StandardLogging',
@@ -70,10 +69,7 @@
         'Write-InfoLog',
         'Write-WarningLog',
         'Write-ErrorLog',
-        'Test-NetworkConnectivity',
-        'Test-WebEndpoint',
-        'Get-SystemInfo',
-        'Get-DiskSpaceInfo',
+        'Send-ErrorWebhook',
         'Invoke-SafeCommand',
         'New-StandardException',
         'Send-NotificationWebhook',
