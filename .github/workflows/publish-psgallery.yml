@@ -86,7 +86,7 @@ jobs:
 
           Write-Host "Publishing module to PowerShell Gallery..."
           try {
-            Publish-Module -Path "./PS-Defaults.psd1" -NuGetApiKey $env:PSGALLERY_API_KEY -Repository PSGallery -Verbose
+            Publish-Module -Path "./PS-Defaults" -NuGetApiKey $env:PSGALLERY_API_KEY -Repository PSGallery -Verbose
             Write-Host "Module published successfully to PowerShell Gallery!"
           }
           catch {
