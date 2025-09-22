@@ -1,5 +1,7 @@
 # PS-Defaults
 
+[![Publish to PowerShell Gallery](https://github.com/fs1n/PS-Defaults/actions/workflows/publish-psgallery.yml/badge.svg)](https://github.com/fs1n/PS-Defaults/actions/workflows/publish-psgallery.yml)
+
 A modular PowerShell framework that standardizes repeating script functions for IT environments. This framework provides a pluggable architecture where you can import only the functionality you need, avoiding system bloat while maintaining consistency across all PowerShell scripts in your IT environment.
 
 ## 🔧 **Modular Architecture**
