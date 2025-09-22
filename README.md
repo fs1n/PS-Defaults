@@ -1,34 +1,68 @@
 # PS-Defaults
 
-A comprehensive PowerShell module that standardizes repeating script functions for IT environments. This module provides a consistent set of tools for logging, error handling, webhooks, configuration management, and common utilities that should be standardized across all PowerShell scripts in the same IT environment.
+A modular PowerShell framework that standardizes repeating script functions for IT environments. This framework provides a pluggable architecture where you can import only the functionality you need, avoiding system bloat while maintaining consistency across all PowerShell scripts in your IT environment.
+
+## 🔧 **Modular Architecture**
+
+PS-Defaults now features a modular design with separate modules for specific functionality:
+
+- **`PS-Defaults`** - Main module that loads `PS-Defaults.Default` for backward compatibility
+- **`PS-Defaults.Default`** - Core functionality (logging, configuration, error handling, utilities)
+- **`PS-Defaults.AdvancedLogging`** - Enhanced logging with analysis and structured logging
+- **`PS-Defaults.Networking`** - Network connectivity testing and monitoring
+- **`PS-Defaults.System`** - System information gathering and monitoring
+
+### Usage Examples
+
+```powershell
+# Load all core functions (backward compatible)
+Import-Module PS-Defaults
+
+# Load only core functions explicitly
+Import-Module PS-Defaults.Default
+
+# Load core + advanced logging features
+Import-Module PS-Defaults.Default
+Import-Module PS-Defaults.AdvancedLogging
+
+# Load specific modules as needed
+Import-Module PS-Defaults.Networking
+Import-Module PS-Defaults.System
+```
 
 ## Features
 
-### 🔍 **Standardized Logging**
+### 🔍 **Standardized Logging** (PS-Defaults.Default)
 - Consistent log formatting with timestamps, levels, and sources
 - Automatic log rotation and retention management
 - Multiple log levels (Debug, Information, Warning, Error)
 - File and console output
 
-### 🚨 **Error Handling & Webhooks**
+### 📊 **Advanced Logging** (PS-Defaults.AdvancedLogging)
+- Detailed logging with performance metrics and stack traces
+- Log analysis and reporting (HTML, JSON, CSV formats)
+- Structured JSON logging for better parsing
+- Log session management with metrics tracking
+- Log forwarding to external systems
+- Custom log formatting options
+
+### 🚨 **Error Handling & Webhooks** (PS-Defaults.Default)
 - Standardized error reporting to webhooks (Slack, Teams, Generic)
 - Safe command execution with retry logic
 - Custom exception creation with additional context
 - Automatic error logging and notification
 
-### ⚙️ **Configuration Management**
+### ⚙️ **Configuration Management** (PS-Defaults.Default)
 - Centralized configuration system
 - Support for multiple configuration sources (Module, Environment, Files)
 - JSON configuration file support
 - Nested configuration keys with dot notation
 
 ### 🌐 **Network & System Utilities**
-- Network connectivity testing (ping, port, DNS)
-- Web endpoint health checks
-- Comprehensive system information gathering
-- Disk space monitoring with alerts
+- **PS-Defaults.Networking**: Network connectivity testing (ping, port, DNS), Web endpoint health checks
+- **PS-Defaults.System**: Comprehensive system information gathering, Disk space monitoring with alerts
 
-### 🛠️ **General Utilities**
+### 🛠️ **General Utilities** (PS-Defaults.Default)
 - Secure string handling
 - Temporary directory management
 - File size formatting
@@ -43,8 +77,14 @@ A comprehensive PowerShell module that standardizes repeating script functions f
    # Clone or download the repository
    git clone https://github.com/fs1n/PS-Defaults.git
    
-   # Import the module
+   # Import the main module (loads PS-Defaults.Default automatically)
    Import-Module ".\PS-Defaults\PS-Defaults.psd1"
+   
+   # Or import specific modules as needed
+   Import-Module ".\PS-Defaults\PS-Defaults.Default.psd1"
+   Import-Module ".\PS-Defaults\PS-Defaults.AdvancedLogging.psd1"
+   Import-Module ".\PS-Defaults\PS-Defaults.Networking.psd1"
+   Import-Module ".\PS-Defaults\PS-Defaults.System.psd1"
    ```
 
 2. **Add to PowerShell Profile:**
@@ -67,6 +107,34 @@ Write-ErrorLog -Message "Database connection failed" -Source "MyApp"
 
 # Or use the main logging function
 Write-StandardLog -Message "Custom operation completed" -Level Information -Source "MyApp"
+```
+
+### Advanced Logging with Enhanced Features
+```powershell
+# Import advanced logging module
+Import-Module PS-Defaults.Default
+Import-Module PS-Defaults.AdvancedLogging
+
+# Start a logging session with performance tracking
+Start-LogSession -SessionName "DataProcessing" -TrackPerformance
+
+# Write detailed logs with performance metrics
+Write-DetailedLog -Message "Processing started" -Level Information -Source "DataProcessor" -Category "Performance" -IncludePerformanceData
+
+# Write structured JSON logs
+Write-StructuredLog -Message "User login" -Level Information -Source "Auth" -CustomFields @{
+    UserId = "12345"
+    IPAddress = "192.168.1.100"
+    UserAgent = "PowerShell"
+}
+
+# Stop session and get metrics
+$SessionMetrics = Stop-LogSession -SessionName "DataProcessing"
+Write-Host "Session completed in $($SessionMetrics.Duration)"
+
+# Analyze logs and generate reports
+$Analysis = Get-LogAnalysis -LogPath "C:\Logs\MyApp"
+Export-LogReport -LogPath "C:\Logs\MyApp" -OutputPath "C:\Reports\LogReport.html" -Format HTML
 ```
 
 ### Error Handling with Webhooks
@@ -151,7 +219,7 @@ if (Test-Administrator) {
 
 ## Available Functions
 
-### Logging Functions
+### Core Logging Functions (PS-Defaults.Default)
 - `Write-StandardLog` - Main logging function with customizable levels
 - `Initialize-StandardLogging` - Configure logging system
 - `Write-DebugLog` - Write debug messages
@@ -159,21 +227,33 @@ if (Test-Administrator) {
 - `Write-WarningLog` - Write warning messages
 - `Write-ErrorLog` - Write error messages
 
-### Error Handling Functions
+### Advanced Logging Functions (PS-Defaults.AdvancedLogging)
+- `Write-DetailedLog` - Enhanced logging with performance metrics and stack traces
+- `Get-LogAnalysis` - Analyze log files and provide statistical information
+- `Export-LogReport` - Generate comprehensive reports in HTML, JSON, or CSV format
+- `Set-AdvancedLogFormat` - Configure advanced logging formats (JSON, custom templates)
+- `Start-LogSession` / `Stop-LogSession` - Manage logging sessions with tracking
+- `Get-LogMetrics` - Get detailed metrics from logging sessions
+- `Write-StructuredLog` - Write structured JSON log entries with custom fields
+- `Enable-LogForwarding` / `Disable-LogForwarding` - Configure log forwarding to external systems
+
+### Error Handling Functions (PS-Defaults.Default)
 - `Send-ErrorWebhook` - Send error notifications to webhooks
 - `Send-NotificationWebhook` - Send general notifications
 - `Invoke-SafeCommand` - Execute commands with error handling
 - `New-StandardException` - Create standardized exceptions
 
-### Configuration Functions
+### Configuration Functions (PS-Defaults.Default)
 - `Get-StandardConfig` - Retrieve configuration values
 - `Set-StandardConfig` - Set configuration values
 - `Import-StandardConfig` - Load configuration from files
 - `Export-StandardConfig` - Save configuration to files
 
-### Network & System Functions
+### Network Functions (PS-Defaults.Networking)
 - `Test-NetworkConnectivity` - Test network connectivity
 - `Test-WebEndpoint` - Test web endpoint availability
+
+### System Functions (PS-Defaults.System)
 - `Get-SystemInfo` - Gather comprehensive system information
 - `Get-DiskSpaceInfo` - Monitor disk space with alerts
 

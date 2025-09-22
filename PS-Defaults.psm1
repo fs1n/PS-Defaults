@@ -1,52 +1,18 @@
-# PS-Defaults PowerShell Module
-# Standardized functions for IT environments
+# PS-Defaults PowerShell Module Framework
+# Modular architecture with pluggable functionality
 
-# Get the path of the module root
-$ModuleRoot = $PSScriptRoot
+# This main module provides backward compatibility by loading PS-Defaults.Default
+# Users can load specific modules directly for targeted functionality:
+# - PS-Defaults.Default (core functions)
+# - PS-Defaults.AdvancedLogging (enhanced logging)
+# - PS-Defaults.Networking (network utilities)
+# - PS-Defaults.System (system monitoring)
 
-# Import all public functions
-$PublicFunctionFolders = @('Logging', 'ErrorHandling', 'Configuration', 'Networking', 'System', 'Utilities')
-foreach ($Folder in $PublicFunctionFolders) {
-    $FolderPath = Join-Path -Path $ModuleRoot -ChildPath "Public\$Folder"
-    if (Test-Path $FolderPath) {
-        Get-ChildItem -Path $FolderPath -Filter '*.ps1' -Recurse | ForEach-Object {
-            . $_.FullName
-        }
-    }
-}
+Write-Host "PS-Defaults Framework loaded. Available modules:" -ForegroundColor Green
+Write-Host "  - PS-Defaults.Default (loaded automatically for compatibility)" -ForegroundColor Cyan
+Write-Host "  - PS-Defaults.AdvancedLogging (Import-Module PS-Defaults.AdvancedLogging)" -ForegroundColor Cyan
+Write-Host "  - PS-Defaults.Networking (Import-Module PS-Defaults.Networking)" -ForegroundColor Cyan
+Write-Host "  - PS-Defaults.System (Import-Module PS-Defaults.System)" -ForegroundColor Cyan
 
-# Import all private functions
-$PrivateFunctionPath = Join-Path -Path $ModuleRoot -ChildPath 'Private'
-if (Test-Path $PrivateFunctionPath) {
-    Get-ChildItem -Path $PrivateFunctionPath -Filter '*.ps1' -Recurse | ForEach-Object {
-        . $_.FullName
-    }
-}
-
-# Initialize module variables
-$TempPath = if ($env:TEMP) { $env:TEMP } elseif ($env:TMPDIR) { $env:TMPDIR } else { '/tmp' }
-$DefaultLogPath = Join-Path -Path $TempPath -ChildPath 'PS-Defaults'
-
-$Script:PSDefaultsConfig = @{
-    LogLevel = 'Information'
-    LogPath = $DefaultLogPath
-    WebhookUrl = $null
-    MaxLogSize = 10MB
-    LogRetentionDays = 30
-}
-
-# Ensure log directory exists
-try {
-    if (-not (Test-Path $Script:PSDefaultsConfig.LogPath)) {
-        New-Item -Path $Script:PSDefaultsConfig.LogPath -ItemType Directory -Force | Out-Null
-    }
-} catch {
-    # Fallback to current directory if temp path fails
-    $Script:PSDefaultsConfig.LogPath = Join-Path -Path (Get-Location) -ChildPath 'PS-Defaults-Logs'
-    if (-not (Test-Path $Script:PSDefaultsConfig.LogPath)) {
-        New-Item -Path $Script:PSDefaultsConfig.LogPath -ItemType Directory -Force | Out-Null
-    }
-}
-
-# Export module variables
-Export-ModuleMember -Variable PSDefaultsConfig
+# The Default module is automatically loaded via NestedModules in the manifest
+# This ensures backward compatibility for existing scripts
