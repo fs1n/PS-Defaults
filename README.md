@@ -15,19 +15,17 @@ PS-Defaults now features a modular design with separate modules for specific fun
 ### Usage Examples
 
 ```powershell
-# Load all core functions (backward compatible)
+# Install from PowerShell Gallery
+Install-Module PS-Defaults
+
+# Import gets core functionality automatically
 Import-Module PS-Defaults
+# ↳ PS-Defaults.Default loads automatically (22 core functions)
 
-# Load only core functions explicitly
-Import-Module PS-Defaults.Default
-
-# Load core + advanced logging features
-Import-Module PS-Defaults.Default
-Import-Module PS-Defaults.AdvancedLogging
-
-# Load specific modules as needed
-Import-Module PS-Defaults.Networking
-Import-Module PS-Defaults.System
+# Load additional modules as needed
+Import-Module PS-Defaults.AdvancedLogging  # 10 enhanced logging functions  
+Import-Module PS-Defaults.Networking       # 2 network functions
+Import-Module PS-Defaults.System          # 2 system monitoring functions
 ```
 
 ## Features
@@ -92,25 +90,6 @@ Import-Module PS-Defaults.System
    # Add to your PowerShell profile for automatic loading
    Import-Module "C:\Path\To\PS-Defaults\PS-Defaults.psd1"
    ```
-
-## CI/CD Automation
-
-PS-Defaults includes automated publishing to PowerShell Gallery using GitHub Actions.
-
-### Automated Publishing Setup
-
-1. **Get PowerShell Gallery API Key**: Log into [PowerShell Gallery](https://www.powershellgallery.com/) → Profile → API Keys → Create new key
-2. **Add Repository Secret**: Go to repository Settings → Secrets → Actions → Add `PSGALLERY_API_KEY`
-3. **Create Release**: The workflow automatically publishes to PowerShell Gallery when you create a GitHub release
-
-### Workflow Features
-
-- ✅ **Automated Testing**: Validates module manifest and imports on every push
-- ✅ **PowerShell Gallery Publishing**: Publishes on release creation only
-- ✅ **Security**: API key stored safely in GitHub secrets
-- ✅ **Validation**: Ensures module compliance before publishing
-
-For detailed setup instructions, see [`.github/PUBLISHING.md`](.github/PUBLISHING.md).
 
 ## Quick Start
 
@@ -302,100 +281,6 @@ The module uses a centralized configuration system that supports multiple source
     LogRetentionDays = 30
 }
 ```
-
-### Webhook Configuration
-Supports multiple webhook formats:
-
-- **Slack**: Rich formatting with color-coded alerts
-- **Microsoft Teams**: MessageCard format with structured information  
-- **Generic**: Simple JSON format for custom integrations
-
-## Examples
-
-### Complete Monitoring Script
-```powershell
-# Import the module
-Import-Module PS-Defaults
-
-# Configure the environment
-Set-StandardConfig -Key "WebhookUrl" -Value "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
-Initialize-StandardLogging -LogPath "C:\Logs\Monitor" -RetentionDays 7
-
-# Start monitoring
-Write-InfoLog -Message "Starting system monitoring" -Source "Monitor"
-
-try {
-    # Test critical services
-    $WebTest = Test-WebEndpoint -Uri "https://your-app.com/health" -ExpectedStatusCode 200
-    if (-not $WebTest.Success) {
-        Send-ErrorWebhook -Message "Web application health check failed" -Source "Monitor" -Environment "Production"
-    }
-    
-    # Check disk space
-    $DiskInfo = Get-DiskSpaceInfo -WarningThresholdPercent 15 -CriticalThresholdPercent 5
-    foreach ($Alert in $DiskInfo.Alerts) {
-        if ($Alert.Level -eq 'Critical') {
-            Send-ErrorWebhook -Message $Alert.Message -Source "Monitor" -Environment "Production"
-        } else {
-            Send-NotificationWebhook -Message $Alert.Message -Level "Warning" -Source "Monitor"
-        }
-    }
-    
-    # Test database connectivity
-    $DbTest = Invoke-SafeCommand -ScriptBlock {
-        Test-NetworkConnectivity -ComputerName "your-db-server.com" -Port 1433
-    } -ErrorAction SendWebhook -Source "DatabaseCheck"
-    
-    Write-InfoLog -Message "Monitoring cycle completed successfully" -Source "Monitor"
-    
-} catch {
-    Write-ErrorLog -Message "Monitoring script failed: $($_.Exception.Message)" -Source "Monitor"
-    Send-ErrorWebhook -ErrorRecord $_ -Source "Monitor" -Environment "Production"
-}
-```
-
-## Module Selection Guide
-
-### When to Use Each Module
-
-**PS-Defaults (Main Module)**
-- Use when you need backward compatibility with existing scripts
-- Automatically loads PS-Defaults.Default for full compatibility
-- Perfect for legacy implementations
-
-**PS-Defaults.Default** 
-- Use for core functionality without bloat
-- Includes: logging, configuration, error handling, utilities
-- Best for: scripts that need basic standardization
-- Memory footprint: ~22 functions
-
-**PS-Defaults.AdvancedLogging**
-- Use when you need detailed logging and analysis
-- Includes: session management, structured logging, HTML/CSV reports
-- Best for: production monitoring, debugging, audit trails
-- Requires: PS-Defaults.Default
-- Additional functions: 10 advanced logging functions
-
-**PS-Defaults.Networking**
-- Use for network-focused scripts and monitoring
-- Includes: connectivity testing, endpoint monitoring
-- Best for: network administration, health checks
-- Standalone module: 2 specialized functions
-
-**PS-Defaults.System**
-- Use for system administration and monitoring
-- Includes: system information, disk monitoring
-- Best for: system health checks, inventory scripts  
-- Standalone module: 2 specialized functions
-
-### Benefits of Modular Architecture
-
-1. **Reduced Memory Footprint**: Import only what you need
-2. **Clear Separation of Concerns**: Each module has a specific purpose
-3. **Enhanced Functionality**: Advanced modules provide powerful features without bloating core module
-4. **Backward Compatibility**: Existing scripts continue to work unchanged
-5. **Future Extensibility**: Easy to add new specialized modules
-6. **Better Organization**: Functions are logically grouped by purpose
 
 ## Contributing
 
