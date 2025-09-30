@@ -358,3 +358,120 @@ function Invoke-WithRetry {
     Write-ErrorLog -Message "All $MaxAttempts attempts failed. Last error: $($LastException.Exception.Message)" -Source $Source
     throw $LastException
 }
+
+function Get-TOTPCode {
+    <#
+    .SYNOPSIS
+    Generates a Time-based One-Time Password (TOTP) code.
+
+    .DESCRIPTION
+    Generates a TOTP code using a Base32-encoded shared secret, compatible with RFC 6238.
+    Uses SHA1 HMAC with a 30-second time window and produces 6-digit codes.
+
+    .PARAMETER SharedSecret
+    The Base32-encoded shared secret key (without spaces or padding).
+
+    .PARAMETER TimeWindow
+    The time window in seconds for TOTP generation. Default is 30 seconds.
+
+    .PARAMETER CodeLength
+    The length of the generated TOTP code. Default is 6 digits.
+
+    .EXAMPLE
+    Get-TOTPCode -SharedSecret "QQ4AXYR5YARC3ZKWRPGTN3WUCQ"
+    # Returns a 6-digit TOTP code like "123456"
+
+    .EXAMPLE
+    Get-TOTPCode -SharedSecret "JBSWY3DPEHPK3PXP" -TimeWindow 60 -CodeLength 8
+    # Returns an 8-digit TOTP code with 60-second window
+    #>
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]$SharedSecret,
+
+        [Parameter(Mandatory = $false)]
+        [int]$TimeWindow = 30,
+
+        [Parameter(Mandatory = $false)]
+        [int]$CodeLength = 6
+    )
+
+    try {
+        # Base32 decode (RFC4648) - returns a byte[]
+        function FromBase32String {
+            param([string]$Base32)
+            
+            $map = @{
+                'A'=0; 'B'=1; 'C'=2; 'D'=3; 'E'=4; 'F'=5; 'G'=6; 'H'=7;
+                'I'=8; 'J'=9; 'K'=10; 'L'=11; 'M'=12; 'N'=13; 'O'=14; 'P'=15;
+                'Q'=16; 'R'=17; 'S'=18; 'T'=19; 'U'=20; 'V'=21; 'W'=22; 'X'=23;
+                'Y'=24; 'Z'=25; '2'=26; '3'=27; '4'=28; '5'=29; '6'=30; '7'=31
+            }
+            
+            if ([string]::IsNullOrEmpty($Base32)) { 
+                return ,([byte[]]@()) 
+            }
+            
+            # Normalize: remove padding, spaces and any non-base32 characters
+            $s = ($Base32.ToUpper() -replace '[^A-Z2-7]', '')
+            if ($s.Length -eq 0) { 
+                return ,([byte[]]@()) 
+            }
+            
+            $buffer = 0
+            $bitsLeft = 0
+            $bytes = New-Object System.Collections.Generic.List[byte]
+            
+            foreach ($ch in $s.ToCharArray()) {
+                $key = [string]$ch
+                if (-not $map.ContainsKey($key)) {
+                    continue
+                }
+                
+                $val = $map[$key]
+                $buffer = ($buffer -shl 5) -bor $val
+                $bitsLeft += 5
+                
+                while ($bitsLeft -ge 8) {
+                    $bitsLeft -= 8
+                    $b = ($buffer -shr $bitsLeft) -band 0xFF
+                    $bytes.Add([byte]$b)
+                }
+            }
+            return $bytes.ToArray()
+        }
+
+        # Calculate time counter
+        $unixTime = [int64](Get-Date -UFormat %s)
+        $counter = [math]::Floor($unixTime / $TimeWindow)
+        
+        # Convert counter to 8-byte array (big-endian)
+        $counterBytes = New-Object byte[] 8
+        for ($i = 7; $i -ge 0; $i--) {
+            $counterBytes[$i] = [byte]($counter -band 0xFF)
+            $counter = $counter -shr 8
+        }
+
+        # Generate HMAC-SHA1
+        $hmac = New-Object System.Security.Cryptography.HMACSHA1
+        $hmac.Key = FromBase32String $SharedSecret
+        $hash = $hmac.ComputeHash($counterBytes)
+
+        # Dynamic truncation
+        $offset = $hash[19] -band 0x0F
+        $binary = (($hash[$offset] -band 0x7F) -shl 24) -bor
+                  (($hash[$offset + 1] -band 0xFF) -shl 16) -bor
+                  (($hash[$offset + 2] -band 0xFF) -shl 8) -bor
+                  ($hash[$offset + 3] -band 0xFF)
+
+        # Generate OTP
+        $otp = $binary % [math]::Pow(10, $CodeLength)
+        
+        return $otp.ToString().PadLeft($CodeLength, '0')
+
+    } catch {
+        Write-ErrorLog -Message "Failed to generate TOTP code: $($_.Exception.Message)" -Source "Get-TOTPCode"
+        throw
+    }
+}
