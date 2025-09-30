@@ -69,6 +69,7 @@ Import-Module PS-Defaults.System          # 2 system monitoring functions
 - Random string generation
 - Administrator privilege checking
 - Retry logic for unreliable operations
+- Base32 Secret TOTP Calculator
 
 ## Installation
 
